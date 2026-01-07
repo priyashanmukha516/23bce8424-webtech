@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Beautiful Task Manager</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: linear-gradient(135deg, #fdfbfb, #ebedee);
+      margin: 20px;
+    }
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+    #taskInput {
+      padding: 10px;
+      width: 250px;
+      border: 2px solid #0078d7;
+      border-radius: 5px;
+    }
+    #addTask {
+      padding: 10px 15px;
+      background: #0078d7;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-left: 10px;
+      transition: 0.3s;
+    }
+    #addTask:hover {
+      background: #005a9e;
+    }
+    .board {
+      display: flex;
+      gap: 20px;
+      justify-content: center;
+      margin-top: 30px;
+    }
+    .column {
+      flex: 1;
+      min-height: 350px;
+      background: #f9f9f9;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      padding: 15px;
+      transition: 0.3s;
+    }
+    .column h3 {
+      text-align: center;
+      color: #0078d7;
+    }
+    .task {
+      background: #fff;
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      cursor: grab;
+      transition: transform 0.2s;
+    }
+    .task:hover {
+      transform: scale(1.03);
+    }
+    .completed {
+      background: #d4edda;
+      border-left: 5px solid #28a745;
+    }
+  </style>
+</head>
+<body>
+  <h2>✨ Stylish Task Manager ✨</h2>
+  <div style="text-align:center;">
+    <input type="text" id="taskInput" placeholder="Enter task name">
+    <button id="addTask">Add Task</button>
+  </div>
+
+  <div class="board">
+    <div class="column" id="todo"><h3>📝 To Do</h3></div>
+    <div class="column" id="inprogress"><h3>⚡ In Progress</h3></div>
+    <div class="column" id="completed"><h3>✅ Completed</h3></div>
+  </div>
+
+  <script>
+    const addTaskBtn = document.getElementById("addTask");
+    const taskInput = document.getElementById("taskInput");
+
+    addTaskBtn.addEventListener("click", () => {
+      const taskName = taskInput.value.trim();
+      if (!taskName) return;
+      const task = document.createElement("div");
+      task.className = "task";
+      task.draggable = true;
+      task.textContent = `${taskName} • ${new Date().toLocaleDateString()}`;
+      task.addEventListener("dragstart", dragStart);
+      document.getElementById("todo").appendChild(task);
+      taskInput.value = "";
+    });
+
+    function dragStart(e) {
+      dragged = e.target;
+    }
+
+    let dragged = null;
+    document.querySelectorAll(".column").forEach(col => {
+      col.addEventListener("dragover", e => e.preventDefault());
+      col.addEventListener("drop", e => {
+        e.preventDefault();
+        if (dragged) {
+          col.appendChild(dragged);
+          if (col.id === "completed") {
+            dragged.classList.add("completed");
+            alert("🎉 Task Completed Successfully!");
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>
