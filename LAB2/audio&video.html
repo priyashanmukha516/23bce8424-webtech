@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Audio and Video Example</title>
+</head>
+<body>
+  <h2>Audio Player</h2>
+  <audio id="myAudio" controls>
+    <source src="sample.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+  <p>Current Time: <span id="audioTime">0</span> seconds</p>
+
+  <h2>Video Player</h2>
+  <video id="myVideo" width="400" controls>
+    <source src="sample.mp4" type="video/mp4">
+    Your browser does not support the video element.
+  </video>
+  <p>Current Time: <span id="videoTime">0</span> seconds</p>
+
+  <script>
+    const audio = document.getElementById("myAudio");
+    const video = document.getElementById("myVideo");
+    const audioTime = document.getElementById("audioTime");
+    const videoTime = document.getElementById("videoTime");
+
+    audio.addEventListener("timeupdate", () => {
+      audioTime.textContent = Math.floor(audio.currentTime);
+    });
+
+    video.addEventListener("timeupdate", () => {
+      videoTime.textContent = Math.floor(video.currentTime);
+    });
+  </script>
+</body>
+</html>
