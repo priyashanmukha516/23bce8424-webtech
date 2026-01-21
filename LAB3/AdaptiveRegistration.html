@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Adaptive Registration System</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #74ebd5 0%, #9face6 100%);
+      margin: 0;
+      padding: 40px;
+      color: #333;
+    }
+
+    h2 {
+      text-align: center;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      margin-bottom: 20px;
+    }
+
+    form {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      padding: 25px;
+      max-width: 450px;
+      margin: auto;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: bold;
+      color: #444;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 2px solid #ddd;
+      transition: border-color 0.3s, box-shadow 0.3s;
+      font-size: 14px;
+    }
+
+    input:focus, select:focus {
+      border-color: #6a5acd;
+      box-shadow: 0 0 8px rgba(106,90,205,0.4);
+      outline: none;
+    }
+
+    .error {
+      border-color: #e74c3c !important;
+      background: #fdecea;
+    }
+
+    .feedback {
+      color: #e74c3c;
+      font-size: 0.85em;
+      margin-top: 4px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #6a5acd, #836fff);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    }
+
+    button:active {
+      transform: translateY(1px);
+      box-shadow: 0 3px 6px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+  <h2>✨ Adaptive Registration Form ✨</h2>
+  <form id="registrationForm">
+    <div class="form-group">
+      <label>Name:</label>
+      <input type="text" id="name" required>
+      <div class="feedback" id="nameFeedback"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Email:</label>
+      <input type="email" id="email" required>
+      <div class="feedback" id="emailFeedback"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Password:</label>
+      <input type="password" id="password" required>
+      <div class="feedback" id="passwordFeedback"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Confirm Password:</label>
+      <input type="password" id="confirmPassword" required>
+      <div class="feedback" id="confirmFeedback"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Age:</label>
+      <input type="number" id="age" required>
+      <div class="feedback" id="ageFeedback"></div>
+    </div>
+
+    <div class="form-group">
+      <label>Role:</label>
+      <select id="role" required>
+        <option value="">Select Role</option>
+        <option value="Student">Student</option>
+        <option value="Teacher">Teacher</option>
+        <option value="Admin">Admin</option>
+      </select>
+      <div class="feedback" id="roleFeedback"></div>
+    </div>
+
+    <div class="form-group hidden" id="skillsGroup">
+      <label>Skills:</label>
+      <input type="text" id="skills">
+      <div class="feedback" id="skillsFeedback"></div>
+    </div>
+
+    <button type="submit">🚀 Register</button>
+  </form>
+
+  <script>
+    // Same JavaScript validation logic as before
+    const form = document.getElementById("registrationForm");
+    const roleSelect = document.getElementById("role");
+    const skillsGroup = document.getElementById("skillsGroup");
+
+    function showFeedback(input, feedbackId, message) {
+      const feedback = document.getElementById(feedbackId);
+      if (message) {
+        input.classList.add("error");
+        feedback.textContent = message;
+      } else {
+        input.classList.remove("error");
+        feedback.textContent = "";
+      }
+    }
+
+    function validateEmail(emailInput) {
+      const value = emailInput.value.trim();
+      const domainPattern = /^[^@]+@example\.com$/;
+      if (!domainPattern.test(value)) {
+        showFeedback(emailInput, "emailFeedback", "Email must be from example.com domain.");
+        return false;
+      }
+      showFeedback(emailInput, "emailFeedback", "");
+      return true;
+    }
+
+    function validatePassword(passwordInput, role) {
+      const value = passwordInput.value;
+      let pattern;
+      if (role === "Admin") {
+        pattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{10,}$/;
+      } else if (role === "Teacher") {
+        pattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/;
+      } else {
+        pattern = /^.{6,}$/;
+      }
+      if (!pattern.test(value)) {
+        showFeedback(passwordInput, "passwordFeedback", `Password requirements not met for ${role}.`);
+        return false;
+      }
+      showFeedback(passwordInput, "passwordFeedback", "");
+      return true;
+    }
+
+    function validateConfirmPassword(confirmInput, passwordInput) {
+      if (confirmInput.value !== passwordInput.value) {
+        showFeedback(confirmInput, "confirmFeedback", "Passwords do not match.");
+        return false;
+      }
+      showFeedback(confirmInput, "confirmFeedback", "");
+      return true;
+    }
+
+    function validateAge(ageInput, role) {
+      const age = parseInt(ageInput.value, 10);
+      let valid = true;
+      if (role === "Student" && (age < 10 || age > 25)) valid = false;
+      else if (role === "Teacher" && (age < 21 || age > 65)) valid = false;
+      else if (role === "Admin" && age < 25) valid = false;
+
+      if (!valid) {
+        showFeedback(ageInput, "ageFeedback", `Invalid age for ${role}.`);
+        return false;
+      }
+      showFeedback(ageInput, "ageFeedback", "");
+      return true;
+    }
+
+    function validateSkills(skillsInput, role) {
+      if ((role === "Teacher" || role === "Admin") && skillsInput.value.trim() === "") {
+        showFeedback(skillsInput, "skillsFeedback", "Skills are required for this role.");
+        return false;
+      }
+      showFeedback(skillsInput, "skillsFeedback", "");
+      return true;
+    }
+
+    roleSelect.addEventListener("change", () => {
+      const role = roleSelect.value;
+      if (role === "Teacher" || role === "Admin") {
+        skillsGroup.classList.remove("hidden");
+      } else {
+        skillsGroup.classList.add("hidden");
+      }
+    });
+
+    form.addEventListener("input", (e) => {
+      const role = roleSelect.value;
+      switch (e.target.id) {
+        case "email": validateEmail(e.target); break;
+        case "password": validatePassword(e.target, role); break;
+        case "confirmPassword": validateConfirmPassword(e.target, document.getElementById("password")); break;
+        case "age": validateAge(e.target, role); break;
+        case "skills": validateSkills(e.target, role); break;
+      }
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const role = roleSelect.value;
+
+      const validName = document.getElementById("name").value.trim() !== "";
+      showFeedback(document.getElementById("name"), "nameFeedback
