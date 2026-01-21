@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Intelligent Shopping Cart</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg1:#ffecd2; --bg2:#fcb69f;
+      --primary:#6a5acd; --primary-dark:#483d8b;
+      --accent:#ff7f50; --danger:#e74c3c; --danger-dark:#c0392b;
+      --success:#27ae60; --text:#333; --white:#fff;
+    }
+    *{box-sizing:border-box}
+    body{
+      font-family:'Segoe UI', Tahoma, sans-serif;
+      background:linear-gradient(135deg,var(--bg1) 0%,var(--bg2) 100%);
+      margin:0; padding:40px; color:var(--text);
+    }
+    h2{
+      text-align:center; color:#fff;
+      text-shadow:2px 2px 4px rgba(0,0,0,0.3);
+      margin-bottom:20px;
+    }
+    .container{
+      background:#fff; border-radius:14px;
+      box-shadow:0 10px 24px rgba(0,0,0,0.2);
+      max-width:900px; margin:auto; padding:24px;
+      animation:fadeIn .8s ease;
+    }
+    @keyframes fadeIn{from{opacity:0; transform:translateY(16px)} to{opacity:1; transform:translateY(0)}}
+
+    /* Sections */
+    .section-title{
+      font-weight:700; margin:10px 0 12px; color:#444;
+    }
+    .grid{
+      display:grid; grid-template-columns:repeat(4,1fr); gap:12px;
+    }
+    .grid .wide{grid-column:span 2}
+    .grid .full{grid-column:1/-1}
+
+    /* Inputs */
+    input, select{
+      width:100%; padding:10px; border-radius:10px;
+      border:2px solid #ddd; font-size:14px;
+      transition:border-color .25s, box-shadow .25s, transform .05s;
+      background:#fff;
+    }
+    input:focus, select:focus{
+      border-color:var(--primary);
+      box-shadow:0 0 10px rgba(106,90,205,.35);
+      outline:none;
+    }
+    .error{
+      border-color:var(--danger)!important;
+      background:#fdecea;
+    }
+    .feedback{
+      color:var(--danger); font-size:.85em; margin-top:4px;
+    }
+
+    /* Buttons */
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center;
+      gap:8px; padding:10px 14px; border:none; border-radius:10px;
+      font-weight:700; cursor:pointer; transition:transform .15s, box-shadow .15s, background .2s;
+    }
+    .btn-primary{ background:linear-gradient(135deg,var(--primary),#836fff); color:#fff; }
+    .btn-primary:hover{ transform:translateY(-2px); box-shadow:0 8px 16px rgba(0,0,0,.2) }
+    .btn-primary:active{ transform:translateY(1px) }
+    .btn-danger{ background:var(--danger); color:#fff }
+    .btn-danger:hover{ background:var(--danger-dark) }
+    .btn-outline{
+      background:#fff; color:var(--primary); border:2px solid var(--primary);
+    }
+    .btn-outline:hover{ background:var(--primary); color:#fff }
+
+    /* Table */
+    table{ width:100%; border-collapse:collapse; margin-top:12px }
+    thead th{
+      background:var(--accent); color:#fff; padding:10px; text-align:center;
+      border-top-left-radius:8px; border-top-right-radius:8px;
+    }
+    tbody td{ padding:10px; text-align:center; border-bottom:1px solid #eee }
+    tbody tr:hover{ background:#fafafa }
+
+    /* Summary */
+    .summary{
+      margin-top:18px; display:flex; flex-direction:column; align-items:flex-end;
+      font-size:1.05em; gap:6px;
+    }
+    .summary .value{ font-weight:800 }
+    .summary .discount{ color:var(--success) }
+
+    /* Coupon */
+    .coupon{
+      display:flex; gap:10px; align-items:center; justify-content:flex-end; margin-top:12px;
+    }
+    .badge{
+      display:inline-block; padding:6px 10px; border-radius:999px;
+      background:#fff; border:2px dashed var(--accent); color:#444; font-size:.9em;
+    }
+
+    /* Responsive */
+    @media (max-width:768px){
+      .grid{ grid-template-columns:1fr 1fr }
+      .coupon{ justify-content:center }
+      .summary{ align-items:center }
+    }
+    @media (max-width:480px){
+      .grid{ grid-template-columns:1fr }
+    }
+  </style>
+</head>
+<body>
+  <h2>🛒 Intelligent Shopping Cart</h2>
+  <div class="container">
+    <!-- Add Product -->
+    <div class="section-title">Add product</div>
+    <div class="grid">
+      <div>
+        <input id="prodName" type="text" placeholder="Product name" />
+        <div id="nameFeedback" class="feedback"></div>
+      </div>
+      <div>
+        <select id="prodCategory">
+          <option value="">Select category</option>
+          <option>Electronics</option>
+          <option>Fashion</option>
+          <option>Education</option>
+          <option>Grocery</option>
+          <option>Home</option>
+          <option>Sports</option>
+        </select>
+        <div id="categoryFeedback" class="feedback"></div>
+      </div>
+      <div>
+        <input id="prodPrice" type="number" placeholder="Price" min="0" step="0.01" />
+        <div id="priceFeedback" class="feedback"></div>
+      </div>
+      <div>
+        <input id="prodQty" type="number" placeholder="Qty" min="1" value="1" />
+        <div id="qtyFeedback" class="feedback"></div>
+      </div>
+      <div class="full" style="display:flex; gap:10px; justify-content:flex-end">
+        <button class="btn btn-outline" id="seedBtn">Seed sample items</button>
+        <button class="btn btn-primary" id="addBtn">Add to cart</button>
+      </div>
+    </div>
+
+    <!-- Cart -->
+    <div class="section-title">Your cart</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Product</th>
+          <th>Category</th>
+          <th>Price</th>
+          <th>Quantity</th>
+          <th>Total</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="cartBody"></tbody>
+    </table>
+
+    <!-- Coupon -->
+    <div class="coupon">
+      <span class="badge">Coupons: SAVE10 ($10 off), 20OFF ($20 off)</span>
+      <input id="coupon" type="text" placeholder="Enter coupon code" />
+      <button class="btn btn-primary" id="applyCouponBtn">Apply coupon</button>
+      <button class="btn btn-outline" id="clearCouponBtn">Clear coupon</button>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary">
+      <div>Subtotal: <span id="subtotal" class="value">$0.00</span></div>
+      <div>Discounts: <span id="discounts" class="value discount">-$0.00</span></div>
+      <div>Final total: <span id="finalTotal" class="value">$0.00</span></div>
+    </div>
+  </div>
+
+  <script>
+    // State
+    let products = [];
+    let couponDiscount = 0;
+    let appliedCoupon = "";
+
+    // Helpers
+    const el = id => document.getElementById(id);
+    function showFeedback(inputEl, feedbackEl, msg){
+      if(msg){
+        inputEl.classList.add("error");
+        feedbackEl.textContent = msg;
+      }else{
+        inputEl.classList.remove("error");
+        feedbackEl.textContent = "";
+      }
+    }
+
+    // Render cart
+    function renderCart(){
+      const body = el("cartBody");
+      body.innerHTML = "";
+      let subtotal = 0;
+      let discounts = 0;
+
+      products.forEach((p, idx) => {
+        const productTotal = p.price * p.quantity;
+
+        // Bulk discount: 10% if qty >= 5
+        if(p.quantity >= 5) discounts += productTotal * 0.10;
+        // Category discount: Fashion 5%
+        if(p.category.toLowerCase() === "fashion") discounts += productTotal * 0.05;
+
+        subtotal += productTotal;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${p.name}</td>
+          <td>${p.category}</td>
+          <td>$${p.price.toFixed(2)}</td>
+          <td>
+            <input type="number" min="1" value="${p.quantity}" style="width:80px"
+              onchange="updateQuantity(${idx}, this.value)" />
+          </td>
+          <td>$${productTotal.toFixed(2)}</td>
+          <td>
+            <button class="btn btn-danger" onclick="removeItem(${idx})">Remove</button>
+          </td>
+        `;
+        body.appendChild(tr);
+      });
+
+      // Time-based discount: 5% between 18:00–21:59
+      const hour = new Date().getHours();
+      if(hour >= 18 && hour <= 21){
+        discounts += subtotal * 0.05;
+      }
+
+      // Coupon discount (flat)
+      discounts += couponDiscount;
+
+      const finalTotal = Math.max(0, subtotal - discounts);
+
+      el("subtotal").textContent = `$${subtotal.toFixed(2)}`;
+      el("discounts").textContent = `-$${discounts.toFixed(2)}`;
+      el("finalTotal").textContent = `$${finalTotal.toFixed(2)}`;
+    }
+
+    // Public functions for inline handlers
+    window.updateQuantity = function(index, value){
+      const qty = parseInt(value, 10);
+      if(isNaN(qty) || qty < 1) return;
+      products[index].quantity = qty;
+      renderCart();
+    }
+    window.removeItem = function(index){
+      products.splice(index, 1);
+      renderCart();
+    }
+
+    // Add product
+    function addProduct(){
+      const nameEl = el("prodName");
+      const catEl = el("prodCategory");
+      const priceEl = el("prodPrice");
+      const qtyEl = el("prodQty");
+
+      const name = nameEl.value.trim();
+      const category = catEl.value.trim();
+      const price = parseFloat(priceEl.value);
+      const qty = parseInt(qtyEl.value, 10);
+
+      let valid = true;
+      showFeedback(nameEl, el("nameFeedback"), name ? "" : "Product name is required.");
+      showFeedback(catEl, el("categoryFeedback"), category ? "" : "Please select a category.");
+      showFeedback(priceEl, el("priceFeedback"), (!isNaN(price) && price >= 0) ? "" : "Enter a valid price.");
+      showFeedback(qtyEl, el("qtyFeedback"), (!isNaN(qty) && qty >= 1) ? "" : "Quantity must be at least 1.");
+
+      valid = name && category && !isNaN(price) && price >= 0 && !isNaN(qty) && qty >= 1;
+      if(!valid) return;
+
+      products.push({ name, category, price, quantity: qty });
+      // Clear inputs
+      nameEl.value = ""; catEl.value = ""; priceEl.value = ""; qtyEl.value = 1;
+      renderCart();
+    }
+
+    // Coupons
+    function applyCoupon(){
+      const raw = el("coupon").value.trim();
+      const code = raw.toUpperCase();
+      couponDiscount = 0; appliedCoupon = "";
+
+      // String methods: startsWith, includes, replace, trim
+      if(code.startsWith("SAVE10")){
+        couponDiscount = 10; appliedCoupon = "SAVE10";
+      }else if(code.includes("20OFF")){
+        couponDiscount = 20; appliedCoupon = "20OFF";
+      }else{
+        alert("Invalid coupon code. Try SAVE10 or 20OFF.");
+      }
+      renderCart();
+    }
+    function clearCoupon(){
+      couponDiscount = 0; appliedCoupon = "";
+      el("coupon").value = "";
+      renderCart();
+    }
+
+    // Seed sample items
+    function seedItems(){
+      products = [
+        { name:"Laptop", category:"Electronics", price:899.99, quantity:1 },
+        { name:"Running Shoes", category:"Fashion", price:79.50, quantity:2 },
+        { name:"Algebra Book", category:"Education", price:24.99, quantity:3 },
+        { name:"Organic Apples", category:"Grocery", price:3.49, quantity:6 },
+        { name:"Yoga Mat", category:"Sports", price:25.00, quantity:1 }
+      ];
+      renderCart();
+    }
+
+    // Event bindings
+    el("addBtn").addEventListener("click", addProduct);
+    el("applyCouponBtn").addEventListener("click", applyCoupon);
+    el("clearCouponBtn").addEventListener("click", clearCoupon);
+    el("seedBtn").addEventListener("click", seedItems);
+
+    // Initial render
+    renderCart();
+  </script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Activity Monitor</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+      background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+      margin: 0;
+      padding: 30px;
+      color: #333;
+    }
+    h2 {
+      text-align: center;
+      color: #fff;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+      margin-bottom: 20px;
+    }
+    .monitor {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    }
+    #log {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      padding: 10px;
+      border-radius: 8px;
+      background: #fafafa;
+      font-size: 14px;
+    }
+    .warning {
+      color: #e74c3c;
+      font-weight: bold;
+      margin-top: 10px;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #6a5acd, #836fff);
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0,0,0,0.2);
+    }
+  </style>
+</head>
+<body>
+  <h2>📊 Real-Time User Activity Monitor</h2>
+  <div class="monitor">
+    <div id="log"></div>
+    <div id="warning" class="warning"></div>
+    <button id="resetBtn">Reset Log</button>
+    <button id="exportBtn">Export Log</button>
+  </div>
+
+  <script>
+    const logContainer = document.getElementById("log");
+    const warningContainer = document.getElementById("warning");
+    const resetBtn = document.getElementById("resetBtn");
+    const exportBtn = document.getElementById("exportBtn");
+
+    let activityLog = [];
+    let clickCount = 0;
+    const CLICK_THRESHOLD = 10; // suspicious if more than 10 clicks in session
+
+    // Utility: log activity
+    function logActivity(type, detail) {
+      const timestamp = new Date().toLocaleTimeString();
+      const entry = { type, detail, timestamp };
+      activityLog.push(entry);
+
+      const div = document.createElement("div");
+      div.textContent = `[${timestamp}] ${type}: ${detail}`;
+      logContainer.appendChild(div);
+
+      // Scroll to bottom
+      logContainer.scrollTop = logContainer.scrollHeight;
+
+      // Suspicious activity check
+      if (type === "Click") {
+        clickCount++;
+        if (clickCount > CLICK_THRESHOLD) {
+          warningContainer.textContent = "⚠️ Suspicious activity: Too many clicks!";
+        }
+      }
+    }
+
+    // Event listeners
+    document.addEventListener("click", e => {
+      logActivity("Click", `Target: ${e.target.tagName}`);
+    }, true); // capturing
+
+    document.addEventListener("keydown", e => {
+      logActivity("Key Press", `Key: ${e.key}`);
+    });
+
+    document.addEventListener("focusin", e => {
+      logActivity("Focus", `Element: ${e.target.tagName}`);
+    });
+
+    // Reset log
+    resetBtn.addEventListener("click", () => {
+      activityLog = [];
+      logContainer.innerHTML = "";
+      warningContainer.textContent = "";
+      clickCount = 0;
+    });
+
+    // Export log
+    exportBtn.addEventListener("click", () => {
+      let formatted = "User Activity Log:\n";
+      activityLog.forEach(entry => {
+        formatted += `[${entry.timestamp}] ${entry.type}: ${entry.detail}\n`;
+      });
+
+      // Create downloadable text file
+      const blob = new Blob([formatted], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "activity_log.txt";
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
