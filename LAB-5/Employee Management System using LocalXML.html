@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Management System - Local XML</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.2em;
+            margin-bottom: 5px;
+        }
+        
+        .content {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+        
+        .form-section, .table-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary { background: #667eea; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-warning { background: #ffc107; color: #212529; }
+        .btn-danger { background: #dc3545; color: white; }
+        
+        .btn:hover:not(:disabled) { transform: translateY(-2px); opacity: 0.9; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        
+        .message {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            display: none;
+        }
+        
+        .message.success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .message.error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:hover { background: #f8f9fa; }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #e9ecef;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .content { grid-template-columns: 1fr; gap: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- HTML Page -->
+    <div class="container">
+        <div class="header">
+            <h1>👔 Employee Management System</h1>
+            <p>XML AJAX CRUD Operations</p>
+        </div>
+        
+        <div class="content">
+            <div class="form-section">
+                <div id="message"></div>
+                
+                <form id="employeeForm">
+                    <input type="hidden" id="editId" value="">
+                    
+                    <div class="form-group">
+                        <label for="empName">Employee Name</label>
+                        <input type="text" id="empName" required minlength="2">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="department">Department</label>
+                        <select id="department" required>
+                            <option value="">Select Department</option>
+                            <option value="IT">IT</option>
+                            <option value="HR">HR</option>
+                            <option value="Finance">Finance</option>
+                            <option value="Marketing">Marketing</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="salary">Salary ($)</label>
+                        <input type="number" id="salary" min="0" required>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success" id="submitBtn">
+                        ➕ Add Employee
+                    </button>
+                    <button type="button" class="btn btn-warning" id="resetBtn">
+                        🔄 Reset
+                    </button>
+                </form>
+            </div>
+            
+            <div class="table-section">
+                <button class="btn btn-primary" id="loadBtn">📥 Load Employees</button>
+                <div id="tableContainer">
+                    <div class="loading" id="loading">
+                        <span class="spinner"></span>Loading employees from XML...
+                    </div>
+                    <table id="employeesTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Salary</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeesBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulate XML data in memory (since real file operations require server)
+        let xmlDoc = null;
+        let employees = [];
+        let nextId = 1;
+
+        // Initialize XML document with sample data
+        function initXML() {
+            const xmlString = `<?xml version="1.0" encoding="UTF-8"?>
+<employees>
+    <employee id="1">
+        <name>John Doe</name>
+        <department>IT</department>
+        <salary>75000</salary>
+    </employee>
+    <employee id="2">
+        <name>Jane Smith</name>
+        <department>HR</department>
+        <salary>65000</salary>
+    </employee>
+    <employee id="3">
+        <name>Mike Johnson</name>
+        <department>Finance</department>
+        <salary>80000</salary>
+    </employee>
+</employees>`;
+            
+            const parser = new DOMParser();
+            xmlDoc = parser.parseFromString(xmlString, 'text/xml');
+            parseEmployeesFromXML();
+        }
+
+        // Parse XML using responseXML & getElementsByTagName
+        function parseEmployeesFromXML() {
+            try {
+                const employeeNodes = xmlDoc.getElementsByTagName('employee');
+                employees = [];
+                
+                for (let i = 0; i < employeeNodes.length; i++) {
+                    const emp = employeeNodes[i];
+                    employees.push({
+                        id: parseInt(emp.getAttribute('id')),
+                        name: emp.getElementsByTagName('name')[0].textContent,
+                        department: emp.getElementsByTagName('department')[0].textContent,
+                        salary: parseInt(emp.getElementsByTagName('salary')[0].textContent)
+                    });
+                }
+                nextId = Math.max(...employees.map(e => e.id), 0) + 1;
+            } catch (error) {
+                showMessage('❌ Malformed XML error!', 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('employeeForm');
+            const tableBody = document.getElementById('employeesBody');
+            const messageEl = document.getElementById('message');
+            const submitBtn = document.getElementById('submitBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const loadBtn = document.getElementById('loadBtn');
+            const loadingEl = document.getElementById('loading');
+            const tableEl = document.getElementById('employeesTable');
+
+            let editingId = null;
+
+            // Show message
+            function showMessage(text, type) {
+                messageEl.textContent = text;
+                messageEl.className = `message ${type}`;
+                messageEl.style.display = 'block';
+                setTimeout(() => messageEl.style.display = 'none', 3000);
+            }
+
+            // Show loading
+            function showLoading(show) {
+                loadingEl.style.display = show ? 'block' : 'none';
+                tableEl.style.display = show ? 'none' : 'table';
+            }
+
+            // Simulate AJAX delay
+            function delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            // Load employees (READ) - Simulates AJAX XML fetch
+            async function loadEmployees() {
+                showLoading(true);
+                await delay(800);
+                
+                try {
+                    initXML(); // Parse XML
+                    renderTable();
+                    showMessage('✅ Employees loaded from XML!', 'success');
+                } catch (error) {
+                    showMessage('❌ Failed to load XML (Empty file)', 'error');
+                } finally {
+                    showLoading(false);
+                }
+            }
+
+            // Render table using DOM manipulation
+            function renderTable() {
+                if (employees.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:40px;color:#6c757d;">No employees found</td></tr>';
+                    return;
+                }
+
+                tableBody.innerHTML = employees.map(emp => `
+                    <tr>
+                        <td>${emp.id}</td>
+                        <td>${emp.name}</td>
+                        <td>${emp.department}</td>
+                        <td>$${emp.salary.toLocaleString()}</td>
+                        <td>
+                            <button class="btn btn-warning" onclick="editEmployee(${emp.id})" style="padding:8px 15px;font-size:14px;">Edit</button>
+                            <button class="btn btn-danger" onclick="deleteEmployee(${emp.id})" style="padding:8px 15px;font-size:14px;">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            // CREATE - Add new employee node to XML
+            async function createEmployee(empData) {
+                await delay(600);
+                try {
+                    const newEmployee = xmlDoc.createElement('employee');
+                    newEmployee.setAttribute('id', nextId.toString());
+                    
+                    const nameNode = xmlDoc.createElement('name');
+                    nameNode.textContent = empData.name;
+                    const deptNode = xmlDoc.createElement('department');
+                    deptNode.textContent = empData.department;
+                    const salaryNode = xmlDoc.createElement('salary');
+                    salaryNode.textContent = empData.salary.toString();
+                    
+                    newEmployee.appendChild(nameNode);
+                    newEmployee.appendChild(deptNode);
+                    newEmployee.appendChild(salaryNode);
+                    
+                    xmlDoc.getElementsByTagName('employees')[0].appendChild(newEmployee);
+                    
+                    parseEmployeesFromXML(); // Re-parse updated XML
+                    renderTable();
+                    showMessage('✅ Employee added to XML!', 'success');
+                    return true;
+                } catch (error) {
+                    showMessage('❌ Create failed!', 'error');
+                    return false;
+                }
+            }
+
+            // UPDATE - Modify existing employee node
+            async function updateEmployee(empData) {
+                await delay(600);
+                try {
+                    const employeeNodes = xmlDoc.getElementsByTagName('employee');
+                    for (let emp of employeeNodes) {
+                        if (emp.getAttribute('id') == editingId) {
+                            emp.getElementsByTagName('name')[0].textContent = empData.name;
+                            emp.getElementsByTagName('department')[0].textContent = empData.department;
+                            emp.getElementsByTagName('salary')[0].textContent = empData.salary.toString();
+                            break;
+                        }
+                    }
+                    parseEmployeesFromXML();
+                    renderTable();
+                    showMessage('✅ Employee updated in XML!', 'success');
+                    return true;
+                } catch (error) {
+                    showMessage('❌ Update failed!', 'error');
+                    return false;
+                }
+            }
+
+            // DELETE - Remove employee node
+            async function deleteEmployee(id) {
+                if (!confirm('Delete this employee?')) return;
+                
+                await delay(500);
+                try {
+                    const employeeNodes = xmlDoc.getElementsByTagName('employee');
+                    for (let i = 0; i < employeeNodes.length; i++) {
+                        if (employeeNodes[i].getAttribute('id') == id) {
+                            employeeNodes[i].parentNode.removeChild(employeeNodes[i]);
+                            break;
+                        }
+                    }
+                    parseEmployeesFromXML();
+                    renderTable();
+                    showMessage('✅ Employee deleted from XML!', 'success');
+                } catch (error) {
+                    showMessage('❌ Delete failed!', 'error');
+                }
+            }
+
+            // Edit employee
+            window.editEmployee = function(id) {
+                const emp = employees.find(e => e.id == id);
+                if (emp) {
+                    document.getElementById('editId').value = emp.id;
+                    document.getElementById('empName').value = emp.name;
+                    document.getElementById('department').value = emp.department;
+                    document.getElementById('salary').value = emp.salary;
+                    editingId = id;
+                    submitBtn.textContent = '💾 Update Employee';
+                }
+            };
+
+            // Form submit (CREATE/UPDATE)
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const empData = {
+                    name: document.getElementById('empName').value.trim(),
+                    department: document.getElementById('department').value,
+                    salary: parseInt(document.getElementById('salary').value)
+                };
+
+                submitBtn.disabled = true;
+                
+                if (editingId) {
+                    await updateEmployee(empData);
+                } else {
+                    await createEmployee(empData);
+                }
+                
+                // Reset form
+                form.reset();
+                document.getElementById('editId').value = '';
+                editingId = null;
+                submitBtn.textContent = '➕ Add Employee';
+                submitBtn.disabled = false;
+            });
+
+            // Reset form
+            resetBtn.addEventListener('click', function() {
+                form.reset();
+                document.getElementById('editId').value = '';
+                editingId = null;
+                submitBtn.textContent = '➕ Add Employee';
+            });
+
+            // Load button
+            loadBtn.addEventListener('click', loadEmployees);
+
+            // Initial load
+            loadEmployees();
+        });
+    </script>
+</body>
+</html>

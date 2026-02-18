@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Library Book Tracker - XML DOM</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+        }
+        
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .table-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            border: 2px solid #e9ecef;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: #4facfe;
+            box-shadow: 0 0 0 3px rgba(79, 172, 254, 0.1);
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+        
+        .btn-primary { background: #4facfe; color: white; }
+        .btn-success { background: #00b894; color: white; }
+        .btn-warning { background: #fdcb6e; color: #2c3e50; }
+        .btn-danger { background: #e17055; color: white; }
+        .btn-info { background: #6c5ce7; color: white; }
+        
+        .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        
+        .message {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+            display: none;
+            text-align: center;
+        }
+        
+        .message.success { background: #d1f2eb; color: #0b8e6a; border: 1px solid #a3e4d7; }
+        .message.error { background: #fadbd8; color: #e74c3c; border: 1px solid #f5b7b1; }
+        
+        .status-available { background: #00b894; color: white; padding: 4px 12px; border-radius: 20px; font-size: 14px; }
+        .status-unavailable { background: #e17055; color: white; padding: 4px 12px; border-radius: 20px; font-size: 14px; }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 16px 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        tr:hover { background: #f8f9fa; }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #4facfe;
+            font-size: 18px;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e3f2fd;
+            border-top: 4px solid #4facfe;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .content { grid-template-columns: 1fr; gap: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📚 Library Book Tracker</h1>
+            <p>XML DOM Manipulation CRUD System</p>
+        </div>
+        
+        <div class="content">
+            <div class="form-section">
+                <div id="message"></div>
+                
+                <!-- Add Book Form -->
+                <div style="margin-bottom: 25px;">
+                    <h3 style="margin-bottom: 15px; color: #2c3e50;">➕ Add New Book</h3>
+                    <form id="addBookForm">
+                        <div class="form-group">
+                            <label>Title</label>
+                            <input type="text" id="bookTitle" required minlength="2">
+                        </div>
+                        <div class="form-group">
+                            <label>Author</label>
+                            <input type="text" id="bookAuthor" required minlength="2">
+                        </div>
+                        <button type="submit" class="btn btn-success">📖 Add Book</button>
+                    </form>
+                </div>
+                
+                <!-- Update Status Form -->
+                <div>
+                    <h3 style="margin-bottom: 15px; color: #2c3e50;">🔄 Update Status</h3>
+                    <form id="updateStatusForm">
+                        <div class="form-group">
+                            <label>Book ID</label>
+                            <input type="number" id="statusBookId" required min="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="bookStatus" required>
+                                <option value="">Select Status</option>
+                                <option value="Available">Available</option>
+                                <option value="Issued">Issued</option>
+                                <option value="Reserved">Reserved</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-warning">💾 Update Status</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="table-section">
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-primary" id="loadBtn" style="width: auto; padding: 12px 25px;">📥 Load Books</button>
+                    <button class="btn btn-danger" id="clearBtn" style="width: auto; padding: 12px 25px;">🗑️ Clear All</button>
+                </div>
+                
+                <div id="tableContainer">
+                    <div class="loading" id="loading">
+                        <span class="spinner"></span>Loading books from XML...
+                    </div>
+                    <table id="booksTable" style="display: none;">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Title</th>
+                                <th>Author</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="booksBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let xmlDoc = null;
+        let books = [];
+        let nextBookId = 1;
+
+        // Initialize XML with sample data
+        function initXML() {
+            const xmlString = `<?xml version="1.0" encoding="UTF-8"?>
+<library>
+    <book id="1">
+        <title>The Great Gatsby</title>
+        <author>F. Scott Fitzgerald</author>
+        <status>Available</status>
+    </book>
+    <book id="2">
+        <title>To Kill a Mockingbird</title>
+        <author>Harper Lee</author>
+        <status>Issued</status>
+    </book>
+    <book id="3">
+        <title>1984</title>
+        <author>George Orwell</author>
+        <status>Available</status>
+    </book>
+</library>`;
+            
+            const parser = new DOMParser();
+            xmlDoc = parser.parseFromString(xmlString, 'text/xml');
+            parseBooksFromXML();
+        }
+
+        // Parse XML using DOM methods
+        function parseBooksFromXML() {
+            try {
+                const bookNodes = xmlDoc.getElementsByTagName('book');
+                books = [];
+                
+                for (let i = 0; i < bookNodes.length; i++) {
+                    const book = bookNodes[i];
+                    books.push({
+                        id: parseInt(book.getAttribute('id')),
+                        title: book.getElementsByTagName('title')[0].textContent,
+                        author: book.getElementsByTagName('author')[0].textContent,
+                        status: book.getElementsByTagName('status')[0].textContent
+                    });
+                }
+                nextBookId = Math.max(...books.map(b => b.id), 0) + 1;
+            } catch (error) {
+                showMessage('❌ Invalid XML structure!', 'error');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const addForm = document.getElementById('addBookForm');
+            const updateForm = document.getElementById('updateStatusForm');
+            const tableBody = document.getElementById('booksBody');
+            const messageEl = document.getElementById('message');
+            const loadBtn = document.getElementById('loadBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const loadingEl = document.getElementById('loading');
+            const tableEl = document.getElementById('booksTable');
+
+            // Utility functions
+            function showMessage(text, type) {
+                messageEl.textContent = text;
+                messageEl.className = `message ${type}`;
+                messageEl.style.display = 'block';
+                setTimeout(() => messageEl.style.display = 'none', 4000);
+            }
+
+            function showLoading(show) {
+                loadingEl.style.display = show ? 'block' : 'none';
+                tableEl.style.display = show ? 'none' : 'table';
+            }
+
+            function delay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+
+            // Render table
+            function renderTable() {
+                if (books.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:50px;color:#95a5a6;">No books in library</td></tr>';
+                    return;
+                }
+
+                tableBody.innerHTML = books.map(book => `
+                    <tr>
+                        <td><strong>#${book.id}</strong></td>
+                        <td>${book.title}</td>
+                        <td>${book.author}</td>
+                        <td><span class="status-${book.status.toLowerCase().replace(' ', '-')}">${book.status}</span></td>
+                        <td>
+                            <button class="btn btn-info" onclick="toggleStatus(${book.id})" style="padding:8px 15px;font-size:14px;margin-right:5px;">🔄 Toggle</button>
+                            <button class="btn btn-danger" onclick="deleteBook(${book.id})" style="padding:8px 15px;font-size:14px;">🗑️ Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            }
+
+            // AJAX-style load (READ)
+            async function loadBooks() {
+                showLoading(true);
+                await delay(800);
+                try {
+                    initXML();
+                    renderTable();
+                    showMessage(`✅ Loaded ${books.length} books from XML!`, 'success');
+                } catch (error) {
+                    showMessage('❌ Failed to load XML data!', 'error');
+                } finally {
+                    showLoading(false);
+                }
+            }
+
+            // CREATE - Add new book node
+            async function addBook(title, author) {
+                if (!title || !author || title.length < 2 || author.length < 2) {
+                    showMessage('❌ Title and Author must be at least 2 characters!', 'error');
+                    return false;
+                }
+
+                await delay(600);
+                try {
+                    const newBook = xmlDoc.createElement('book');
+                    newBook.setAttribute('id', nextBookId.toString());
+                    
+                    const titleNode = xmlDoc.createElement('title');
+                    titleNode.textContent = title;
+                    const authorNode = xmlDoc.createElement('author');
+                    authorNode.textContent = author;
+                    const statusNode = xmlDoc.createElement('status');
+                    statusNode.textContent = 'Available';
+                    
+                    newBook.appendChild(titleNode);
+                    newBook.appendChild(authorNode);
+                    newBook.appendChild(statusNode);
+                    
+                    xmlDoc.getElementsByTagName('library')[0].appendChild(newBook);
+                    
+                    parseBooksFromXML();
+                    renderTable();
+                    showMessage('✅ Book added to library!', 'success');
+                    return true;
+                } catch (error) {
+                    showMessage('❌ Failed to add book!', 'error');
+                    return false;
+                }
+            }
+
+            // UPDATE - Toggle availability status
+            window.toggleStatus = async function(bookId) {
+                await delay(500);
+                try {
+                    const bookNodes = xmlDoc.getElementsByTagName('book');
+                    for (let book of bookNodes) {
+                        if (book.getAttribute('id') == bookId) {
+                            const currentStatus = book.getElementsByTagName('status')[0].textContent;
+                            const newStatus = currentStatus === 'Available' ? 'Issued' : 'Available';
+                            book.getElementsByTagName('status')[0].textContent = newStatus;
+                            break;
+                        }
+                    }
+                    parseBooksFromXML();
+                    renderTable();
+                    showMessage(`✅ Status updated to ${newStatus}!`, 'success');
+                } catch (error) {
+                    showMessage('❌ Failed to update status!', 'error');
+                }
+            };
+
+            // UPDATE - Status form
+            async function updateBookStatus(bookId, status) {
+                if (!bookId || !status) {
+                    showMessage('❌ Please provide Book ID and Status!', 'error');
+                    return false;
+                }
+
+                await delay(600);
+                try {
+                    const bookNodes = xmlDoc.getElementsByTagName('book');
+                    let found = false;
+                    for (let book of bookNodes) {
+                        if (book.getAttribute('id') == bookId) {
+                            book.getElementsByTagName('status')[0].textContent = status;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (found) {
+                        parseBooksFromXML();
+                        renderTable();
+                        showMessage('✅ Book status updated!', 'success');
+                        return true;
+                    } else {
+                        showMessage('❌ Book ID not found!', 'error');
+                        return false;
+                    }
+                } catch (error) {
+                    showMessage('❌ Failed to update status!', 'error');
+                    return false;
+                }
+            }
+
+            // DELETE - Remove book node
+            window.deleteBook = async function(bookId) {
+                if (!confirm('Delete this book permanently?')) return;
+                
+                await delay(500);
+                try {
+                    const bookNodes = xmlDoc.getElementsByTagName('book');
+                    for (let i = 0; i < bookNodes.length; i++) {
+                        if (bookNodes[i].getAttribute('id') == bookId) {
+                            bookNodes[i].parentNode.removeChild(bookNodes[i]);
+                            break;
+                        }
+                    }
+                    parseBooksFromXML();
+                    renderTable();
+                    showMessage('✅ Book removed from library!', 'success');
+                } catch (error) {
+                    showMessage('❌ Failed to delete book!', 'error');
+                }
+            };
+
+            // CLEAR ALL
+            clearBtn.addEventListener('click', async function() {
+                if (!confirm('Delete ALL books? This cannot be undone!')) return;
+                
+                await delay(300);
+                try {
+                    const libraryNode = xmlDoc.getElementsByTagName('library')[0];
+                    while (libraryNode.firstChild) {
+                        libraryNode.removeChild(libraryNode.firstChild);
+                    }
+                    parseBooksFromXML();
+                    renderTable();
+                    showMessage('🗑️ Library cleared!', 'success');
+                } catch (error) {
+                    showMessage('❌ Failed to clear library!', 'error');
+                }
+            });
+
+            // Event Listeners
+            addForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const title = document.getElementById('bookTitle').value.trim();
+                const author = document.getElementById('bookAuthor').value.trim();
+                document.querySelector('#addBookForm .btn').disabled = true;
+                await addBook(title, author);
+                addForm.reset();
+                document.querySelector('#addBookForm .btn').disabled = false;
+            });
+
+            updateForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                const bookId = parseInt(document.getElementById('statusBookId').value);
+                const status = document.getElementById('bookStatus').value;
+                document.querySelector('#updateStatusForm .btn').disabled = true;
+                await updateBookStatus(bookId, status);
+                updateForm.reset();
+                document.querySelector('#updateStatusForm .btn').disabled = false;
+            });
+
+            loadBtn.addEventListener('click', loadBooks);
+
+            // Initial load
+            loadBooks();
+        });
+    </script>
+</body>
+</html>
