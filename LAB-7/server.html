@@ -1,0 +1,174 @@
+const express = require('express');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(express.json());
+
+// Connect to MongoDB
+mongoose.connect('mongodb://localhost:27017/studentdb', {
+  useNewUrlParser: true,
+  useUnifiedTopology: true
+});
+
+// ===== QUESTION 1: NOTES MANAGER =====
+const noteSchema = new mongoose.Schema({
+  title: String,
+  subject: String,
+  description: String,
+  created_date: { type: Date, default: Date.now }
+});
+const Note = mongoose.model('Note', noteSchema);
+
+// 1. ADD NOTE (POST /notes)
+app.post('/notes', async (req, res) => {
+  try {
+    const note = new Note({
+      title: req.body.title,
+      subject: req.body.subject,
+      description: req.body.description
+    });
+    await note.save();
+    res.json(note);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// 2. VIEW NOTES (GET /notes)
+app.get('/notes', async (req, res) => {
+  try {
+    const notes = await Note.find().sort({ created_date: -1 });
+    res.json(notes);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 3. UPDATE NOTE (PUT /notes/:id)
+app.put('/notes/:id', async (req, res) => {
+  try {
+    const note = await Note.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true }
+    );
+    if (!note) return res.status(404).json({ error: 'Note not found' });
+    res.json(note);
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// 4. DELETE NOTE (DELETE /notes/:id)
+app.delete('/notes/:id', async (req, res) => {
+  try {
+    const note = await Note.findByIdAndDelete(req.params.id);
+    if (!note) return res.status(404).json({ error: 'Note not found' });
+    res.json({ message: 'Note deleted successfully' });
+  } catch (error) {
+    res.status(400).json({ error: error.message });
+  }
+});
+
+// ===== QUESTION 2: BOOK FINDER =====
+const bookSchema = new mongoose.Schema({
+  title: String,
+  author: String,
+  category: String,
+  price: Number,
+  rating: Number,
+  year: Number
+});
+const Book = mongoose.model('Book', bookSchema);
+
+// Insert sample data (run once)
+async function insertSampleBooks() {
+  const count = await Book.countDocuments();
+  if (count === 0) {
+    await Book.insertMany([
+      { title: "JavaScript Essentials", author: "John Smith", category: "Programming", price: 450, rating: 4.5, year: 2023 },
+      { title: "MongoDB Basics", author: "Jane Doe", category: "Database", price: 350, rating: 4.2, year: 2022 },
+      { title: "React Advanced", author: "Mike Johnson", category: "Programming", price: 500, rating: 4.8, year: 2024 },
+      { title: "Python Mastery", author: "Sarah Wilson", category: "Programming", price: 400, rating: 4.7, year: 2023 },
+      { title: "Node.js Guide", author: "David Brown", category: "Backend", price: 380, rating: 4.1, year: 2022 },
+      { title: "Express.js Cookbook", author: "Tom Lee", category: "Backend", price: 420, rating: 4.3, year: 2023 }
+    ]);
+    console.log('Sample books inserted');
+  }
+}
+insertSampleBooks();
+
+// 1. SEARCH BOOKS BY TITLE (GET /books/search?title=javascript)
+app.get('/books/search', async (req, res) => {
+  const { title } = req.query;
+  try {
+    const books = await Book.find({
+      title: { $regex: title, $options: 'i' }
+    });
+    res.json(books);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 2. FILTER BY CATEGORY (GET /books/category/programming)
+app.get('/books/category/:category', async (req, res) => {
+  try {
+    const books = await Book.find({ category: req.params.category });
+    res.json(books);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 3. SORT BOOKS (GET /books/sort/price?asc=true)
+app.get('/books/sort/:field', async (req, res) => {
+  const sortOrder = req.query.asc === 'true' ? 1 : -1;
+  try {
+    const books = await Book.find().sort({ [req.params.field]: sortOrder });
+    res.json(books);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 4. TOP RATED BOOKS (GET /books/top)
+app.get('/books/top', async (req, res) => {
+  try {
+    const books = await Book.find({ rating: { $gte: 4 } })
+      .limit(5)
+      .sort({ rating: -1 });
+    res.json(books);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// 5. PAGINATION (GET /books?page=2)
+app.get('/books', async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = 5;
+  const skip = (page - 1) * limit;
+  
+  try {
+    const books = await Book.find().skip(skip).limit(limit);
+    const total = await Book.countDocuments();
+    res.json({
+      books,
+      total,
+      page,
+      pages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.listen(3000, () => {
+  console.log('🚀 Server running on http://localhost:3000');
+  console.log('📝 Notes endpoints: POST/GET/PUT/DELETE /notes');
+  console.log('📚 Books endpoints: GET /books, /books/search, /books/top');
+});

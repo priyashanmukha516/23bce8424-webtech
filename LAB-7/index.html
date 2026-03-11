@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MongoDB Lab - Notes & Books</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; }
+        .section { margin: 30px 0; padding: 20px; border: 1px solid #ddd; border-radius: 10px; }
+        .form-group { margin-bottom: 15px; }
+        input, textarea, select, button { padding: 8px; margin: 5px; border: 1px solid #ccc; border-radius: 4px; }
+        button { background: #007bff; color: white; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .item { border: 1px solid #eee; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .delete-btn { background: #dc3545; }
+        .edit-btn { background: #28a745; }
+    </style>
+</head>
+<body>
+    <!-- QUESTION 1: NOTES MANAGER -->
+    <div class="section">
+        <h1>📝 Student Notes Manager</h1>
+        
+        <div class="form-group">
+            <input type="text" id="noteTitle" placeholder="Title">
+            <input type="text" id="noteSubject" placeholder="Subject">
+            <textarea id="noteDesc" placeholder="Description" rows="3"></textarea>
+            <button onclick="addNote()">➕ Add Note</button>
+        </div>
+        
+        <div id="notesList">Loading notes...</div>
+    </div>
+
+    <!-- QUESTION 2: BOOK FINDER -->
+    <div class="section">
+        <h1>📚 Online Book Finder</h1>
+        
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <input type="text" id="bookSearch" placeholder="Search title...">
+            <button onclick="searchBooks()">🔍 Search</button>
+            <select id="bookCategory" onchange="filterByCategory()">
+                <option value="">All Categories</option>
+                <option value="Programming">Programming</option>
+                <option value="Database">Database</option>
+                <option value="Backend">Backend</option>
+            </select>
+            <button onclick="loadTopBooks()">⭐ Top Rated</button>
+            <button onclick="loadBooks(1)">📖 All Books</button>
+        </div>
+        
+        <div id="booksList">Loading books...</div>
+        <div id="pagination"></div>
+    </div>
+
+    <script>
+        // ===== NOTES MANAGER =====
+        async function addNote() {
+            const title = document.getElementById('noteTitle').value;
+            const subject = document.getElementById('noteSubject').value;
+            const description = document.getElementById('noteDesc').value;
+
+            if (!title || !subject || !description) {
+                alert('Please fill all fields');
+                return;
+            }
+
+            try {
+                const response = await fetch('/notes', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, subject, description })
+                });
+                
+                if (response.ok) {
+                    loadNotes();
+                    document.getElementById('noteTitle').value = '';
+                    document.getElementById('noteSubject').value = '';
+                    document.getElementById('noteDesc').value = '';
+                    alert('✅ Note added!');
+                }
+            } catch (error) {
+                alert('❌ Error adding note');
+            }
+        }
+
+        async function loadNotes() {
+            try {
+                const response = await fetch('/notes');
+                const notes = await response.json();
+                document.getElementById('notesList').innerHTML = notes.map(note => `
+                    <div class="item">
+                        <h3>${note.title}</h3>
+                        <p><strong>Subject:</strong> ${note.subject}</p>
+                        <p>${note.description}</p>
+                        <small>📅 ${new Date(note.created_date).toLocaleDateString()}</small>
+                        <div style="margin-top: 10px;">
+                            <button class="edit-btn" onclick="editNote('${note._id}')">✏️ Edit</button>
+                            <button class="delete-btn" onclick="deleteNote('${note._id}')">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `).join('') || '<p>No notes yet</p>';
+            } catch (error) {
+                document.getElementById('notesList').innerHTML = 'Error loading notes';
+            }
+        }
+
+        async function editNote(id) {
+            const newTitle = prompt('New title:');
+            const newDesc = prompt('New description:');
+            if (newTitle && newDesc) {
+                await fetch(`/notes/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title: newTitle, description: newDesc })
+                });
+                loadNotes();
+            }
+        }
+
+        async function deleteNote(id) {
+            if (confirm('Delete this note?')) {
+                await fetch(`/notes/${id}`, { method: 'DELETE' });
+                loadNotes();
+            }
+        }
+
+        // ===== BOOK FINDER =====
+        async function searchBooks() {
+            const title = document.getElementById('bookSearch').value;
+            const response = await fetch(`/books/search?title=${title}`);
+            const books = await response.json();
+            displayBooks(books);
+        }
+
+        async function filterByCategory() {
+            const category = document.getElementById('bookCategory').value;
+            if (category) {
+                const response = await fetch(`/books/category/${category}`);
+                const books = await response.json();
+                displayBooks(books);
+            }
+        }
+
+        async function loadTopBooks() {
+            const response = await fetch('/books/top');
+            const books = await response.json();
+            displayBooks(books);
+        }
+
+        async function loadBooks(page = 1) {
+            const response = await fetch(`/books?page=${page}`);
+            const data = await response.json();
+            displayBooks(data.books);
+            displayPagination(data);
+        }
+
+        function displayBooks(books) {
+            document.getElementById('booksList').innerHTML = books.map(book => `
+                <div class="item">
+                    <h3>${book.title}</h3>
+                    <p><strong>👤 ${book.author}</strong> | <strong>📂 ${book.category}</strong></p>
+                    <p><strong>💰 ₹${book.price}</strong> | 
+                       <strong>⭐ ${book.rating}</strong> | 
+                       <strong>📅 ${book.year}</strong>
+                    </p>
+                </div>
+            `).join('') || '<p>No books found</p>';
+        }
+
+        function displayPagination(data) {
+            const pagination = document.getElementById('pagination');
+            if (data.pages > 1) {
+                pagination.innerHTML = Array.from({length: data.pages}, (_, i) => 
+                    `<button onclick="loadBooks(${i+1})" ${i+1 === data.page ? 'disabled' : ''}>${i+1}</button>`
+                ).join(' ');
+            } else {
+                pagination.innerHTML = '';
+            }
+        }
+
+        // Load initial data
+        window.onload = () => {
+            loadNotes();
+            loadBooks(1);
+        };
+    </script>
+</body>
+</html>
