@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>ES6 Lab Sheet 8 - TIRUVADRI NATARAJA SHANMUKHA PRIYA 23BCE8424</title>
+    <style>
+        body { font-family: Arial; margin: 40px; background: #f5f5f5; }
+        .exercise { background: white; padding: 20px; margin: 20px 0; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        h2 { color: #2563eb; border-bottom: 2px solid #2563eb; padding-bottom: 10px; }
+        pre { background: #f8f9fa; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        .output { background: #d1fae5; border-left: 4px solid #10b981; }
+    </style>
+</head>
+<body>
+    <h1>🖥️ ES6 Lab Sheet 8 - Results</h1>
+    
+    <div class="exercise">
+        <h2>Exercise 1: Student Marks Average</h2>
+        <pre id="ex1-output"></pre>
+    </div>
+
+    <div class="exercise">
+        <h2>Exercise 2: Object Destructuring</h2>
+        <pre id="ex2-output"></pre>
+    </div>
+
+    <div class="exercise">
+        <h2>Exercise 3: Course Enrollment</h2>
+        <pre id="ex3-output"></pre>
+    </div>
+
+    <script>
+        // Exercise 1
+        let studentName = 'Arun';
+        let mark1 = 85, mark2 = 90, mark3 = 88;
+        const calculateAverage = (m1, m2, m3) => (m1 + m2 + m3) / 3;
+        let average = calculateAverage(mark1, mark2, mark3);
+        let total = mark1 + mark2 + mark3;
+        document.getElementById('ex1-output').textContent = 
+            `Student Name: ${studentName}\nTotal Marks: ${total}\nAverage Marks: ${average.toFixed(2)}`;
+
+        // Exercise 2
+        const student = { id: 101, name: 'Priya', department: 'CSE', marks: 92 };
+        const { id, name, department, marks } = student;
+        const updatedStudent = { ...student, grade: 'A' };
+        document.getElementById('ex2-output').textContent = 
+            `${id} ${name} ${department} ${marks}\n\nUpdated Student: ${JSON.stringify(updatedStudent, null, 2)}`;
+
+        // Exercise 3
+        class Course {
+            constructor(courseName, instructor) {
+                this.courseName = courseName;
+                this.instructor = instructor;
+            }
+            displayCourse() {
+                return `Course: ${this.courseName}, Instructor: ${this.instructor}`;
+            }
+        }
+        let course1 = new Course('Web Technologies', 'Dr. Kumar');
+        let enrollCourse = new Promise((resolve, reject) => {
+            let seatsAvailable = true;
+            if (seatsAvailable) resolve('Enrollment Successful');
+            else reject('Course Full');
+        });
+        enrollCourse.then(msg => {
+            document.getElementById('ex3-output').textContent = 
+                `${course1.displayCourse()}\n${msg}`;
+        });
+    </script>
+</body>
+</html>
