@@ -1,0 +1,48 @@
+.app {
+  font-family: Arial, sans-serif;
+  max-width: 700px;
+  margin: 20px auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+}
+
+.app h1 {
+  text-align: center;
+  color: #333;
+}
+
+.loading,
+.empty {
+  color: #6c757d;
+  text-align: center;
+}
+
+.error {
+  color: #dc3545;
+  text-align: center;
+}
+
+.api-list {
+  list-style: none;
+  padding: 0;
+}
+
+.api-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.api-item:last-child {
+  border-bottom: none;
+}
+
+.api-item strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.api-item p {
+  margin: 0;
+  font-size: 0.95em;
+  color: #555;
+}
